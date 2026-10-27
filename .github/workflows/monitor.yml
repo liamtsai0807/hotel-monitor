@@ -1,1 +1,71 @@
-
+{
+ "name": "房價監控",
+ "on": {
+  "schedule": [
+   {
+    "cron": "23 0,12 * * *"
+   }
+  ],
+  "workflow_dispatch": {}
+ },
+ "permissions": {
+  "contents": "write",
+  "pages": "write",
+  "id-token": "write"
+ },
+ "concurrency": {
+  "group": "hotel-monitor",
+  "cancel-in-progress": false
+ },
+ "jobs": {
+  "check": {
+   "runs-on": "ubuntu-latest",
+   "environment": {
+    "name": "github-pages",
+    "url": "${{ steps.deploy.outputs.page_url }}"
+   },
+   "env": {
+    "TZ": "Asia/Taipei",
+    "SERPAPI_KEY": "${{ secrets.SERPAPI_KEY }}",
+    "TELEGRAM_BOT_TOKEN": "${{ secrets.TELEGRAM_BOT_TOKEN }}",
+    "TELEGRAM_CHAT_ID": "${{ secrets.TELEGRAM_CHAT_ID }}"
+   },
+   "steps": [
+    {
+     "uses": "actions/checkout@v4"
+    },
+    {
+     "uses": "actions/setup-python@v5",
+     "with": {
+      "python-version": "3.12"
+     }
+    },
+    {
+     "name": "檢查房價（降價會發通知）",
+     "run": "python hotel_monitor.py check"
+    },
+    {
+     "name": "保存價格紀錄",
+     "run": "git config user.name \"github-actions[bot]\"\ngit config user.email \"41898282+github-actions[bot]@users.noreply.github.com\"\ngit add hotel_monitor.db\ngit diff --cached --quiet || git commit -m \"更新價格紀錄 $(date '+%Y-%m-%d %H:%M')\"\ngit push\n"
+    },
+    {
+     "name": "產生網頁",
+     "run": "python hotel_monitor.py export --out site"
+    },
+    {
+     "uses": "actions/configure-pages@v5"
+    },
+    {
+     "uses": "actions/upload-pages-artifact@v3",
+     "with": {
+      "path": "site"
+     }
+    },
+    {
+     "id": "deploy",
+     "uses": "actions/deploy-pages@v4"
+    }
+   ]
+  }
+ }
+}
