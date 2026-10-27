@@ -1,0 +1,42 @@
+# ===== 訂房監控設定 =====
+
+[settings]
+provider = "serpapi"          # "serpapi"（Google Hotels 真實資料）或 "mock"（假資料，測試用）
+currency = "TWD"
+language = "zh-TW"
+country = "tw"
+interval_minutes = 60         # watch 模式每隔幾分鐘檢查一次
+property_drop_alert_pct = 0   # 指定房源：降價超過幾 % 就通知（0 = 一降價就通知）
+price_drop_alert_pct = 5      # 區域搜尋：降價超過幾 % 就通知
+db_path = "hotel_monitor.db"
+
+# 共用的入住日期與人數；個別房源可以覆寫
+[defaults]
+check_in = "2026-12-24"
+check_out = "2026-12-27"
+adults = 2
+children = 1
+children_ages = [6]           # 小孩年齡，數量要跟 children 一樣
+
+# ===== 第一階段：指定房源 =====
+# token 用 `python hotel_monitor.py find "城市 飯店名稱"` 取得
+
+[[property]]
+name = "京王廣場飯店"
+token = "請貼上 find 查到的 token"
+target_price = 6000           # 選填：每晚低於此價格額外提醒，0 = 不設
+
+# [[property]]
+# name = "東京灣希爾頓"
+# token = "..."
+# check_in = "2026-12-27"     # 這間用不同日期
+# check_out = "2026-12-29"
+
+# ===== 之後的階段：區域搜尋（依評分、價格區間找新飯店）=====
+# [[watch]]
+# name = "東京 聖誕節"
+# location = "東京 新宿"
+# min_rating = 4.0
+# min_price = 3000
+# max_price = 9000
+# max_results = 20
